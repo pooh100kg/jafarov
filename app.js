@@ -1,5 +1,5 @@
 /* 
-   APP.JS - OPTIMIZED FOR MOBILE
+   APP.JS - UNIVERSAL PLAYER & LOGIC
 */
 
 function getYouTubeID(url) {
@@ -9,12 +9,23 @@ function getYouTubeID(url) {
     return (match && match[2].length === 11) ? match[2] : null;
 }
 
-// VIDEO DATA
 const videoList = [
-    { title: "VIDEO 01", link: "videos/video1.mp4" },
-    { title: "VIDEO 02", link: "videos/video2.mp4" },
-    { title: "VIDEO 03", link: "videos/video3.mp4" },
-    { title: "VIDEO 04", link: "videos/video4.mp4" }
+    {
+        title: "", 
+        link: "videos/video1.mp4", 
+    },
+    {
+        title: "",
+        link: "videos/video2.mp4",
+    },
+    {
+        title: "FASHION EDIT",
+        link: "videos/video3.mp4",
+    },
+    {
+        title: "CAR VLOG",
+        link: "videos/video4.mp4",
+    }
 ];
 
 class App {
@@ -35,25 +46,19 @@ class App {
             isMobile: window.innerWidth < 768
         };
 
-        setTimeout(() => { if(this.state.isLoading) this.finishLoading(); }, 2000);
+        setTimeout(() => { if(this.state.isLoading) this.finishLoading(); }, 2500);
         this.init();
     }
 
     init() {
         try {
             this.audio = new AudioController();
-            this.videoPlayer = new UniversalPlayer(this.audio, this.state.isMobile);
+            this.videoPlayer = new UniversalPlayer(this.audio);
             this.setupPreloader();
             this.setupEventListeners();
-            this.setupFireflies(); // Replaces old background setup
+            this.setupFireflies();
             this.renderGrid();
-            
-            // Only run cursor loop on desktop
-            if (!this.state.isMobile) {
-                this.loop();
-            } else {
-                if(this.dom.cursor) this.dom.cursor.style.display = 'none';
-            }
+            this.loop();
         } catch (e) {
             console.error("Init Error:", e);
             this.finishLoading();
@@ -64,7 +69,7 @@ class App {
         const bar = this.dom.preloader.querySelector('.progress-bar');
         let width = 0;
         const interval = setInterval(() => {
-            width += Math.random() * 20;
+            width += Math.random() * 15;
             if (width >= 100) {
                 width = 100;
                 clearInterval(interval);
@@ -86,66 +91,36 @@ class App {
     setupEventListeners() {
         const openBtn = document.getElementById('open-portfolio');
         const backBtn = document.getElementById('back-home');
-        
-        if(openBtn) openBtn.addEventListener('click', () => { 
-            this.audio.play('click'); 
-            this.switchScreen('portfolio'); 
-        });
-        
-        if(backBtn) backBtn.addEventListener('click', () => { 
-            this.audio.play('click'); 
-            this.switchScreen('hero'); 
-        });
+        if(openBtn) openBtn.addEventListener('click', () => { this.audio.play('click'); this.switchScreen('portfolio'); });
+        if(backBtn) backBtn.addEventListener('click', () => { this.audio.play('click'); this.switchScreen('hero'); });
 
-        // Desktop Only Interactions
-        if (!this.state.isMobile) {
-            window.addEventListener('mousemove', (e) => {
-                this.state.mouseX = e.clientX; 
-                this.state.mouseY = e.clientY;
-                this.checkCursorHover(e);
-            }, { passive: true });
+        window.addEventListener('mousemove', (e) => {
+            this.state.mouseX = e.clientX; this.state.mouseY = e.clientY;
+            this.checkCursorHover(e);
+        }, { passive: true });
 
-            document.querySelectorAll('.btn-apple').forEach(btn => {
+        document.querySelectorAll('.btn-apple').forEach(btn => {
+            if(!this.state.isMobile) {
                 btn.addEventListener('mousemove', (e) => this.tiltButton(e, btn));
                 btn.addEventListener('mouseleave', () => {
                     btn.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale(1)`;
                     if(this.dom.cursor) this.dom.cursor.classList.remove('cursor-hover');
                 });
-                btn.addEventListener('mouseenter', () => {
-                    this.audio.play('hover'); 
-                    if(this.dom.cursor) this.dom.cursor.classList.add('cursor-hover');
-                });
+            }
+            btn.addEventListener('mouseenter', () => {
+                this.audio.play('hover'); 
+                if(this.dom.cursor) this.dom.cursor.classList.add('cursor-hover');
             });
-        }
-    }
-
-    // Fireflies Logic (Lightweight DOM)
-    setupFireflies() {
-        if (!this.dom.fireflies) return;
-        this.dom.fireflies.innerHTML = '';
-        const count = this.state.isMobile ? 15 : 30; // Fewer particles on mobile
-        
-        for(let i=0; i<count; i++) {
-            const f = document.createElement('div');
-            f.classList.add('firefly');
-            
-            // Random properties
-            const size = Math.random() * 3 + 2;
-            f.style.width = `${size}px`;
-            f.style.height = `${size}px`;
-            f.style.left = `${Math.random() * 100}%`;
-            f.style.animationDuration = `${10 + Math.random() * 20}s`;
-            f.style.animationDelay = `${Math.random() * 5}s`;
-            
-            this.dom.fireflies.appendChild(f);
-        }
+        });
     }
 
     checkCursorHover(e) {
-        if (!this.dom.cursor) return;
+        if (!this.dom.cursor || this.state.isMobile) return;
         const target = e.target;
-        const isInteractive = target.closest('a') || target.closest('button') || target.closest('.video-card');
-        
+        const isInteractive = target.closest('#video-modal') || 
+                              target.closest('.video-card') || 
+                              target.tagName === 'A' || target.tagName === 'BUTTON' ||
+                              target.closest('.progress-track');
         if (isInteractive) {
             this.dom.cursor.classList.add('cursor-dot-active');
         } else {
@@ -157,9 +132,9 @@ class App {
         const rect = btn.getBoundingClientRect();
         const x = e.clientX - rect.left - rect.width / 2;
         const y = e.clientY - rect.top - rect.height / 2;
-        const xRot = -(y / rect.height) * 10; // Reduced rotation for performance
-        const yRot = (x / rect.width) * 10;
-        btn.style.transform = `perspective(1000px) rotateX(${xRot}deg) rotateY(${yRot}deg) scale(1.02)`;
+        const xRot = -(y / rect.height) * 20;
+        const yRot = (x / rect.width) * 20;
+        btn.style.transform = `perspective(1000px) rotateX(${xRot}deg) rotateY(${yRot}deg) scale(1.05)`;
     }
 
     switchScreen(target) {
@@ -172,14 +147,12 @@ class App {
                 hero.style.display = 'none'; port.style.display = 'flex';
                 void port.offsetWidth; 
                 port.classList.replace('hidden-screen', 'active-screen');
+                port.style.visibility = 'visible';
                 
-                // Animate cards
                 const cards = port.querySelectorAll('.card-wrapper');
                 cards.forEach((card, index) => {
-                    card.classList.remove('card-visible'); 
-                    card.style.animation = 'none'; 
-                    card.offsetHeight;
-                    card.style.animation = `cardEntrance 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards ${index * 0.05}s`;
+                    card.classList.remove('card-visible'); card.style.animation = 'none'; card.offsetHeight;
+                    card.style.animation = `cardEntrance 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards ${index * 0.1}s`;
                 });
             }, 500);
         } else {
@@ -199,10 +172,9 @@ class App {
             let contentHtml = '';
 
             if (ytId) {
-                const thumbUrl = `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`;
-                contentHtml = `<div class="grid-video-element" style="background: url('${thumbUrl}') center/cover no-repeat;"></div>`;
+                const thumbUrl = `https://img.youtube.com/vi/${ytId}/maxresdefault.jpg`;
+                contentHtml = `<div class="grid-video-element" style="background: url('${thumbUrl}') center/cover;"></div>`;
             } else {
-                // Mobile optimization: Use poster or simplified video element
                 contentHtml = `
                     <video class="grid-video-element" muted playsinline preload="metadata">
                         <source src="${video.link}#t=0.1" type="video/mp4">
@@ -228,6 +200,8 @@ class App {
             card.addEventListener('click', (e) => {
                 e.preventDefault();
                 const link = card.getAttribute('href');
+                if (link === '#' || link === '') return;
+                
                 if (link.includes('t.me')) {
                     window.open(link, '_blank');
                 } else {
@@ -235,38 +209,81 @@ class App {
                 }
             });
             
-            // Mouseover Play - Only on Desktop
-            if (!this.state.isMobile) {
-                const vid = card.querySelector('video');
-                if(vid) {
-                    card.addEventListener('mouseenter', () => { 
-                        this.audio.play('hover');
-                        vid.play().catch(()=>{}); 
-                    });
-                    card.addEventListener('mouseleave', () => { 
-                        vid.pause(); 
-                        vid.currentTime = 0; 
-                    });
-                } else {
-                    card.addEventListener('mouseenter', () => this.audio.play('hover'));
-                }
+            const vid = card.querySelector('video');
+            if(vid && !this.state.isMobile) {
+                card.addEventListener('mouseenter', () => { 
+                    this.audio.play('hover');
+                    vid.play().catch(()=>{}); 
+                });
+                card.addEventListener('mouseleave', () => { 
+                    vid.pause(); 
+                    vid.currentTime = 0; 
+                });
+            } else {
+                card.addEventListener('mouseenter', () => this.audio.play('hover'));
             }
         });
     }
 
-    loop() {
-        if (this.dom.cursor) {
-            const currentX = parseFloat(this.dom.cursor.dataset.x) || this.state.mouseX;
-            const currentY = parseFloat(this.dom.cursor.dataset.y) || this.state.mouseY;
+    setupFireflies() {
+        if(!this.dom.fireflies) return;
+        this.dom.fireflies.innerHTML = '';
+        
+        const count = this.state.isMobile ? 25 : 80;
+
+        for(let i=0; i<count; i++) {
+            const fly = document.createElement('div');
+            fly.classList.add('firefly');
             
-            // Linear interpolation for smooth cursor
-            const nextX = currentX + (this.state.mouseX - currentX) * 0.2;
-            const nextY = currentY + (this.state.mouseY - currentY) * 0.2;
+            const size = Math.random() * 3 + 1; 
+            fly.style.width = `${size}px`; 
+            fly.style.height = `${size}px`;
             
-            this.dom.cursor.style.transform = `translate(${nextX}px, ${nextY}px) translate(-50%, -50%)`;
-            this.dom.cursor.dataset.x = nextX; 
-            this.dom.cursor.dataset.y = nextY;
+            fly.style.left = `${Math.random()*100}%`; 
+            fly.style.top = `${Math.random()*100}%`;
+            
+            fly.dataset.x = Math.random() * 100;
+            fly.dataset.y = Math.random() * 100;
+            fly.dataset.vx = (Math.random() - 0.5) * (this.state.isMobile ? 0.05 : 0.1); 
+            fly.dataset.vy = (Math.random() - 0.5) * (this.state.isMobile ? 0.05 : 0.1);
+            
+            fly.style.opacity = Math.random() * 0.5 + 0.3;
+            
+            this.dom.fireflies.appendChild(fly);
         }
+    }
+
+    loop() {
+        if (!this.state.isMobile && this.dom.cursor) {
+            const currentX = parseFloat(this.dom.cursor.dataset.x) || 0;
+            const currentY = parseFloat(this.dom.cursor.dataset.y) || 0;
+            const nextX = currentX + (this.state.mouseX - currentX) * 0.15;
+            const nextY = currentY + (this.state.mouseY - currentY) * 0.15;
+            this.dom.cursor.style.transform = `translate(${nextX}px, ${nextY}px) translate(-50%, -50%)`;
+            this.dom.cursor.dataset.x = nextX; this.dom.cursor.dataset.y = nextY;
+        }
+
+        if(this.dom.fireflies) {
+            const flies = this.dom.fireflies.children;
+            for (let fly of flies) {
+                let x = parseFloat(fly.dataset.x); 
+                let y = parseFloat(fly.dataset.y);
+                let vx = parseFloat(fly.dataset.vx); 
+                let vy = parseFloat(fly.dataset.vy);
+
+                x += vx; 
+                y += vy;
+
+                if(x < -5 || x > 105) fly.dataset.vx = vx * -1;
+                if(y < -5 || y > 105) fly.dataset.vy = vy * -1;
+                
+                fly.dataset.x = x; 
+                fly.dataset.y = y;
+                
+                fly.style.transform = `translate3d(${x - 50}vw, ${y - 50}vh, 0)`;
+            }
+        }
+        
         requestAnimationFrame(() => this.loop());
     }
 }
@@ -276,19 +293,12 @@ class AudioController {
         this.sounds = { hover: document.getElementById('sound-hover'), click: document.getElementById('sound-click') };
         Object.values(this.sounds).forEach(s => { if(s) s.volume = 0.2; });
     }
-    play(id) { 
-        const s = this.sounds[id]; 
-        if (s && s.readyState >= 2) { 
-            s.currentTime = 0; 
-            s.play().catch(() => {}); 
-        } 
-    }
+    play(id) { const s = this.sounds[id]; if (s) { s.currentTime = 0; s.play().catch(() => {}); } }
 }
 
 class UniversalPlayer {
-    constructor(audioCtrl, isMobile) {
+    constructor(audioCtrl) {
         this.audio = audioCtrl;
-        this.isMobile = isMobile;
         this.currentIndex = 0;
         
         this.dom = {
@@ -296,12 +306,13 @@ class UniversalPlayer {
             content: document.querySelector('.modal-content'),
             iframe: document.getElementById('lb-iframe'),
             video: document.getElementById('lb-video'),
-            videoBg: document.getElementById('lb-video-bg'),
+            videoBg: document.getElementById('lb-video-bg'), 
             blurContainer: document.querySelector('.lb-blur-bg'),
             loader: document.querySelector('.lb-loader'),
             hud: document.querySelector('.hud-controls'),
             progressTrack: document.querySelector('.progress-track'),
             progressFill: document.querySelector('.progress-fill'),
+            progressHover: document.querySelector('.progress-hover'),
             playBtn: document.querySelector('.play-btn'),
             timeCurrent: document.querySelector('.time-current'),
             timeTotal: document.querySelector('.time-total'),
@@ -318,13 +329,27 @@ class UniversalPlayer {
         const backdrop = this.dom.modal.querySelector('.modal-backdrop');
         if(backdrop) backdrop.addEventListener('click', () => this.close());
 
+        document.addEventListener('keydown', (e) => {
+            if (this.dom.modal.classList.contains('modal-hidden')) return;
+            if (e.key === 'Escape') this.close();
+            if (e.key === 'ArrowRight') this.next();
+            if (e.key === 'ArrowLeft') this.prev();
+            if (e.key === ' ') { e.preventDefault(); this.togglePlay(); }
+        });
+
         if(this.dom.prevBtn) this.dom.prevBtn.addEventListener('click', () => this.prev());
         if(this.dom.nextBtn) this.dom.nextBtn.addEventListener('click', () => this.next());
 
         if(this.dom.playBtn) this.dom.playBtn.addEventListener('click', () => this.togglePlay());
-        
         if(this.dom.progressTrack) {
             this.dom.progressTrack.addEventListener('click', (e) => this.seek(e));
+            this.dom.progressTrack.addEventListener('mousemove', (e) => this.hoverSeek(e));
+            let isDragging = false;
+            this.dom.progressTrack.addEventListener('mousedown', () => isDragging = true);
+            document.addEventListener('mouseup', () => isDragging = false);
+            document.addEventListener('mousemove', (e) => {
+                if(isDragging && !this.dom.video.paused) this.seek(e);
+            });
         }
 
         this.dom.video.addEventListener('timeupdate', () => this.updateProgress());
@@ -332,6 +357,7 @@ class UniversalPlayer {
         this.dom.video.addEventListener('playing', () => { if(this.dom.loader) this.dom.loader.style.opacity = '0'; });
         this.dom.video.addEventListener('ended', () => {
              this.dom.playBtn.innerText = "►";
+             this.dom.videoBg.pause();
         });
     }
 
@@ -341,38 +367,43 @@ class UniversalPlayer {
         this.dom.modal.classList.remove('modal-hidden');
         document.body.style.overflow = 'hidden';
 
-        // Reset
         this.dom.iframe.classList.remove('active');
         this.dom.iframe.src = "";
         this.dom.video.classList.remove('active');
         this.dom.video.pause();
+        this.dom.videoBg.src = "";
+        this.dom.blurContainer.classList.remove('active');
+        this.dom.hud.style.display = 'none';
         this.dom.loader.style.opacity = '1';
 
         const ytID = getYouTubeID(item.link);
 
         if (ytID) {
-            // YOUTUBE
             this.dom.content.style.aspectRatio = '16/9';
+            this.dom.content.style.width = '90%';
             let ytUrl = `https://www.youtube.com/embed/${ytID}?autoplay=1&modestbranding=1&rel=0&playsinline=1`;
             this.dom.iframe.src = ytUrl;
             this.dom.iframe.classList.add('active');
-            this.dom.loader.style.opacity = '0';
+            setTimeout(() => { this.dom.loader.style.opacity = '0'; }, 1000);
         } else {
-            // MP4
             this.dom.video.src = item.link;
             this.dom.video.classList.add('active');
             
-            // Only play background video if NOT mobile (Performance fix)
-            if (!this.isMobile && this.dom.videoBg) {
-                this.dom.videoBg.src = item.link;
-                this.dom.blurContainer.classList.add('active');
-            }
+            this.dom.videoBg.src = item.link;
+            this.dom.blurContainer.classList.add('active');
 
+            this.dom.hud.style.display = 'flex';
             this.dom.playBtn.innerText = "❚❚";
-            this.dom.video.play().catch(e => console.log("Autoplay blocked"));
             
-            if (!this.isMobile && this.dom.videoBg) {
-                this.dom.videoBg.play().catch(()=>{});
+            this.dom.content.style.aspectRatio = '16/9'; 
+            this.dom.content.style.width = '90%';
+            this.dom.content.style.height = 'auto';
+
+            const playPromise = this.dom.video.play();
+            if(playPromise !== undefined) {
+                playPromise.then(() => {
+                    this.dom.videoBg.play();
+                }).catch(e => console.log("Autoplay blocked"));
             }
         }
     }
@@ -381,11 +412,11 @@ class UniversalPlayer {
         if(this.dom.video.classList.contains('active')) {
             if(this.dom.video.paused) {
                 this.dom.video.play();
-                if(!this.isMobile) this.dom.videoBg.play();
+                this.dom.videoBg.play();
                 this.dom.playBtn.innerText = "❚❚";
             } else {
                 this.dom.video.pause();
-                if(!this.isMobile) this.dom.videoBg.pause();
+                this.dom.videoBg.pause();
                 this.dom.playBtn.innerText = "►";
             }
         }
@@ -395,7 +426,15 @@ class UniversalPlayer {
         if(!this.dom.video.duration) return;
         const rect = this.dom.progressTrack.getBoundingClientRect();
         const pos = (e.clientX - rect.left) / rect.width;
-        this.dom.video.currentTime = pos * this.dom.video.duration;
+        const targetTime = pos * this.dom.video.duration;
+        this.dom.video.currentTime = targetTime;
+        this.dom.videoBg.currentTime = targetTime;
+    }
+
+    hoverSeek(e) {
+        const rect = this.dom.progressTrack.getBoundingClientRect();
+        const pos = (e.clientX - rect.left) / rect.width;
+        this.dom.progressHover.style.width = `${pos * 100}%`;
     }
 
     updateProgress() {
@@ -406,8 +445,7 @@ class UniversalPlayer {
             this.dom.timeCurrent.innerText = this.formatTime(vid.currentTime);
             this.dom.timeTotal.innerText = this.formatTime(vid.duration);
             
-            // Sync BG video on desktop only
-            if(!this.isMobile && Math.abs(this.dom.videoBg.currentTime - vid.currentTime) > 0.5) {
+            if(Math.abs(this.dom.videoBg.currentTime - vid.currentTime) > 0.5) {
                 this.dom.videoBg.currentTime = vid.currentTime;
             }
         }
@@ -435,15 +473,12 @@ class UniversalPlayer {
     close() {
         this.dom.modal.classList.add('modal-hidden');
         document.body.style.overflow = '';
-        
         setTimeout(() => {
             this.dom.iframe.src = "";
             this.dom.video.pause();
             this.dom.video.src = "";
-            if(this.dom.videoBg) {
-                this.dom.videoBg.pause();
-                this.dom.videoBg.src = "";
-            }
+            this.dom.videoBg.pause();
+            this.dom.videoBg.src = "";
         }, 300);
     }
 }
