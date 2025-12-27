@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Portfolio">
+    <meta name="description" content="THE JAF - Portfolio">
     <meta name="theme-color" content="#050505">
     
     <title>THE JAF | Portfolio</title>
@@ -23,18 +23,16 @@
         </div>
     </div>
 
-    <!-- Audio -->
     <audio id="sound-hover" src="hover.mp3" preload="metadata"></audio>
     <audio id="sound-click" src="click.mp3" preload="metadata"></audio>
 
-    <!-- Background Layers (Optimized) -->
+    <!-- Background Layers -->
     <div class="noise-overlay"></div>
     <div class="vignette"></div>
     
-    <!-- Fireflies Container -->
+    <!-- Fireflies Container (Replaces Lines) -->
     <div id="fireflies-container"></div>
-    
-    <!-- Cursor Follower (Hidden on Mobile) -->
+    <div id="background-effects"></div>
     <div id="cursor-follower" class="cursor-glow"></div>
 
     <!-- UNIVERSAL LIGHTBOX PLAYER -->
@@ -52,13 +50,11 @@
             <button id="close-modal" aria-label="Close">&times;</button>
             
             <div class="lb-engine-wrapper">
-                <!-- Ambilight Background (Disabled on mobile via CSS/JS to prevent lag) -->
                 <div class="lb-blur-bg">
                     <video id="lb-video-bg" muted playsinline loop></video>
                     <div class="lb-blur-overlay"></div>
                 </div>
 
-                <!-- Main Content -->
                 <iframe id="lb-iframe" class="lb-element" allow="autoplay; encrypted-media" allowfullscreen></iframe>
                 
                 <video id="lb-video" class="lb-element" playsinline>
@@ -79,6 +75,7 @@
                     <div class="time-display">
                         <span class="time-current">00:00</span> / <span class="time-total">00:00</span>
                     </div>
+                    <div class="hud-spacer"></div>
                 </div>
             </div>
         </div>
@@ -88,31 +85,12 @@
     <main class="content active-screen" id="hero-section">
         <div class="header-group">
             <div class="logo-stack">
-                <!-- Animated Yellow Line Container -->
-                <div id="yellow-line-container">
-                    <svg viewBox="0 0 400 100" preserveAspectRatio="none">
-                        <defs>
-                            <filter id="scribble-glow" x="-50%" y="-50%" width="200%" height="200%">
-                                <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-                                <feMerge>
-                                    <feMergeNode in="coloredBlur"/>
-                                    <feMergeNode in="SourceGraphic"/>
-                                </feMerge>
-                            </filter>
-                        </defs>
-                        <!-- Zig-Zag Scribble Path -->
-                        <path class="scribble-path" 
-                              d="M20,50 Q60,30 100,50 T180,50 T260,50 T340,50 T380,40" 
-                              vector-effect="non-scaling-stroke" />
-                        <path class="scribble-path delay" 
-                              d="M25,58 Q65,38 105,58 T185,58 T265,58 T345,58 T385,48" 
-                              vector-effect="non-scaling-stroke" />
-                    </svg>
-                </div>
-
-                <div class="logo-container apple-anim delay-1">
-                    <!-- Replace logo.png with your actual file -->
-                    <img src="logo.png" alt="THE JAF" class="logo-img" draggable="false">
+                <div class="logo-wrapper apple-anim delay-1">
+                    <div id="yellow-line-container"></div>
+                    <div class="logo-container" tabindex="0">
+                        <img src="logo.png" alt="THE JAF" class="logo-img" draggable="false">
+                    </div>
+                    
                 </div>
             </div>
             <div class="subtitle-badge apple-anim delay-2">Reels Video Montage</div>
@@ -139,6 +117,8 @@
         <div class="video-grid" id="grid-container"></div>
     </section>
     
+    <script src="app.js" defer></script>
+	<script src="line.js" defer></script> 
     <script src="app.js" defer></script>
 </body>
 </html>
