@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="THE JAF - Portfolio">
+    <meta name="theme-color" content="#050505">
+    
+    <title>THE JAF | Portfolio</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Loading Screen -->
+    <div id="preloader" aria-hidden="true">
+        <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+        </div>
+    </div>
+
+    <audio id="sound-hover" src="hover.mp3" preload="metadata"></audio>
+    <audio id="sound-click" src="click.mp3" preload="metadata"></audio>
+
+    <!-- Background Layers -->
+    <div class="noise-overlay"></div>
+    <div class="vignette"></div>
+    
+    <div id="neon-lines-container">
+        <svg class="neon-svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+            <defs>
+                <filter id="neon-glow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="15" result="coloredBlur"/>
+                    <feMerge>
+                        <feMergeNode in="coloredBlur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                </filter>
+            </defs>
+            <path class="neon-path left-path" d="M-100,800 C100,700 300,400 200,100 C150,-50 400,-100 600,-200" />
+            <path class="neon-path right-path" d="M2000,200 C1800,400 1500,500 1600,900 C1650,1100 1300,1200 1100,1300" />
+        </svg>
+    </div>
+
+    <div id="fireflies-container"></div>
+    <div id="background-effects"></div>
+    <div id="cursor-follower" class="cursor-glow"></div>
+
+    <!-- UNIVERSAL LIGHTBOX PLAYER (AMBILIGHT EDITION) -->
+    <div id="video-modal" class="modal-hidden" role="dialog" aria-modal="true">
+        <div class="modal-backdrop"></div>
+        
+        <button id="prev-video" class="modal-nav-btn prev" aria-label="Previous">
+            <svg viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+        </button>
+        <button id="next-video" class="modal-nav-btn next" aria-label="Next">
+            <svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+        </button>
+
+        <div class="modal-content">
+            <button id="close-modal" aria-label="Close">&times;</button>
+            
+            <div class="lb-engine-wrapper">
+                <!-- AMBILIGHT LAYER (Blurred BG Video) -->
+                <div class="lb-blur-bg">
+                    <video id="lb-video-bg" muted playsinline loop></video>
+                    <div class="lb-blur-overlay"></div>
+                </div>
+
+                <!-- MAIN CONTENT LAYERS -->
+                <iframe id="lb-iframe" class="lb-element" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                
+                <video id="lb-video" class="lb-element" playsinline>
+                    <source src="" type="video/mp4">
+                </video>
+
+                <div class="lb-loader"></div>
+            </div>
+
+            <!-- HUD Controls -->
+            <div class="hud-controls">
+                <div class="progress-track">
+                    <div class="progress-fill"></div>
+                    <div class="progress-hover"></div>
+                </div>
+                <div class="hud-bottom">
+                    <button class="hud-btn play-btn">►</button>
+                    <div class="time-display">
+                        <span class="time-current">00:00</span> / <span class="time-total">00:00</span>
+                    </div>
+                    <div class="hud-spacer"></div>
+                    <!-- Volume could be added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <main class="content active-screen" id="hero-section">
+        <div class="header-group">
+            <div class="logo-stack">
+                <div id="yellow-line-container"></div>
+                <div class="logo-container apple-anim delay-1" tabindex="0">
+                    <img src="logo.png" alt="THE JAF" class="logo-img" draggable="false">
+                </div>
+            </div>
+            <div class="subtitle-badge apple-anim delay-2">Reels Video Montage</div>
+        </div>
+
+        <nav class="buttons-block apple-anim delay-3">
+            <a href="https://t.me/dzw0rk" target="_blank" class="btn btn-apple"><span>TELEGRAM</span></a>
+            <button id="open-portfolio" class="btn btn-apple"><span>PORTFOLIO</span></button>
+        </nav>
+    </main>
+
+    <!-- Portfolio Section -->
+    <section class="content hidden-screen" id="portfolio-section">
+        <div class="portfolio-header">
+            <h2 class="section-title">PORTFOLIO</h2>
+            <button id="back-home" class="btn-back">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                BACK
+            </button>
+        </div>
+
+        <div class="video-grid" id="grid-container"></div>
+    </section>
+    
+    <script src="app.js" defer></script>
+</body>
+</html>
